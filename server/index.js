@@ -14,6 +14,10 @@ if (ADMIN_PASSWORD === 'changeme') {
 }
 
 app.use(express.json());
+app.use((req, res, next) => {
+  res.set('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
+  next();
+});
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 const SLOT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
