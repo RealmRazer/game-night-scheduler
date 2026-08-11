@@ -1,0 +1,19 @@
+{
+  "name": "game-night-scheduler",
+  "version": "1.0.0",
+  "description": "Self-hosted When2meet-style availability scheduler for planning game nights.",
+  "main": "server/index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

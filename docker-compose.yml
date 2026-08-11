@@ -1,0 +1,13 @@
+services:
+  scheduler:
+    build: .
+    container_name: game-night-scheduler
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
+      PORT: 3000
+      DATA_DIR: /app/data
+    volumes:
+      - ./data:/app/data

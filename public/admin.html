@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin — Game Night Scheduler</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="wrap" id="login-view">
+    <div class="admin-login panel">
+      <p class="eyebrow">Admin</p>
+      <h1 class="title" style="font-size:22px; margin-bottom:16px;">Sign in</h1>
+      <div class="field">
+        <label for="admin-password">Admin password</label>
+        <input type="password" id="admin-password" placeholder="••••••••" style="width:100%;" />
+      </div>
+      <button class="btn-primary" id="login-btn" style="width:100%;">Sign in</button>
+      <p id="login-error" style="color:var(--danger); font-size:13px; margin-top:10px; display:none;"></p>
+      <p class="footer-note"><a href="/">&larr; Back to schedule</a></p>
+    </div>
+  </div>
+
+  <div class="wrap" id="admin-view" style="display:none;">
+    <div class="ledger-head">
+      <div>
+        <p class="eyebrow">Admin</p>
+        <h1 class="title">Run the ledger</h1>
+        <p class="subtitle">Set the window, lock in a time, or wipe the board for the next round.</p>
+      </div>
+      <div class="head-actions">
+        <a href="/" class="btn-ghost" style="text-decoration:none; display:inline-flex; align-items:center; padding:10px 16px; border-radius:8px; font-size:14px; font-weight:600;">View schedule</a>
+        <button class="btn-ghost btn-small" id="logout-btn">Sign out</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="panel-title">Grid settings</p>
+      <div class="form-grid">
+        <div class="field full">
+          <label for="cfg-title">Event title</label>
+          <input type="text" id="cfg-title" maxlength="80" />
+        </div>
+        <div class="field">
+          <label for="cfg-start-date">First day</label>
+          <input type="date" id="cfg-start-date" />
+        </div>
+        <div class="field">
+          <label for="cfg-end-date">Last day</label>
+          <input type="date" id="cfg-end-date" />
+        </div>
+        <div class="field">
+          <label for="cfg-start-time">Earliest time</label>
+          <input type="time" id="cfg-start-time" />
+        </div>
+        <div class="field">
+          <label for="cfg-end-time">Latest time</label>
+          <input type="time" id="cfg-end-time" />
+        </div>
+        <div class="field">
+          <label for="cfg-slot-minutes">Slot length</label>
+          <select id="cfg-slot-minutes">
+            <option value="15">15 minutes</option>
+            <option value="30">30 minutes</option>
+            <option value="60">60 minutes</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label for="cfg-timezone">Event timezone (how the times above should be interpreted)</label>
+          <select id="cfg-timezone" style="width:100%;"></select>
+        </div>
+      </div>
+      <button class="btn-primary" id="save-config-btn">Save settings</button>
+      <span id="config-status" style="margin-left:10px; font-size:13px; color:var(--text-muted);"></span>
+    </div>
+
+    <div id="confirmed-banner-slot"></div>
+
+    <div class="panel">
+      <p class="panel-title">Pick the winning time</p>
+      <p class="subtitle" style="margin-top:-6px;">Click a cell below to select it, then confirm. Darker cells have more players available — hover to see who.</p>
+      <div class="identity-bar" style="margin-bottom:14px;">
+        <span class="mode-pill" style="border-color:var(--border);">Showing times in</span>
+        <select id="tz-select" style="min-width:220px;"></select>
+      </div>
+      <div class="identity-bar" style="margin-bottom:14px;">
+        <button class="btn-primary" id="confirm-btn" disabled>Confirm selected time</button>
+        <button class="btn-ghost" id="unconfirm-btn" style="display:none;">Clear confirmed time</button>
+      </div>
+      <div class="filter-status" id="filter-status">
+        <span>Highlighting <span class="who" id="filter-status-name"></span>'s picks</span>
+        <button id="filter-clear-btn">Clear</button>
+      </div>
+
+      <div class="grid-scroll">
+        <table class="grid-table" id="grid-table"></table>
+      </div>
+      <div class="legend">
+        <span>Fewer</span>
+        <span class="legend-swatches" id="legend-swatches"></span>
+        <span>More</span>
+        <span style="margin-left:14px;">★ most popular slot</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="panel-title">Responses (<span id="response-count">0</span>)</p>
+      <div class="participant-chips" id="participant-chips"><span style="color:var(--text-muted); font-size:13px;">No one yet.</span></div>
+      <button class="btn-danger" id="clear-btn" style="margin-top:16px;">Clear all responses &amp; start a new round</button>
+    </div>
+  </div>
+
+  <div class="grid-tooltip" id="tooltip"></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="js/grid.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

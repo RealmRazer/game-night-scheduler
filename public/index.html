@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Game Night Scheduler</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="ledger-head">
+      <div>
+        <p class="eyebrow">Availability Ledger</p>
+        <h1 class="title" id="event-title">Loading…</h1>
+        <p class="subtitle">Mark the times you can play. Everyone's picks stack into the heatmap below.</p>
+      </div>
+      <div class="head-actions">
+        <a href="/admin" class="btn-ghost" style="text-decoration:none; display:inline-flex; align-items:center; padding:10px 16px; border-radius:8px; font-size:14px; font-weight:600;">Admin</a>
+      </div>
+    </div>
+
+    <div id="confirmed-banner-slot"></div>
+
+    <div class="identity-bar" style="margin-bottom:16px;">
+      <span class="mode-pill" style="border-color:var(--border);">Showing times in</span>
+      <select id="tz-select" style="min-width:220px;"></select>
+    </div>
+
+    <div class="panel">
+      <p class="panel-title">Who are you?</p>
+      <div class="identity-bar">
+        <input type="text" id="name-input" placeholder="Type your name…" maxlength="60" />
+        <button class="btn-primary" id="edit-btn">Mark my availability</button>
+        <span class="mode-pill" id="mode-pill">viewing</span>
+      </div>
+    </div>
+
+    <div class="panel" id="editing-help" style="display:none;">
+      <p class="panel-title">Click and drag over the grid to paint the times you're free. Click again to erase.</p>
+      <div class="identity-bar">
+        <button class="btn-primary" id="save-btn">Save my availability</button>
+        <button class="btn-ghost" id="cancel-btn">Cancel</button>
+        <button class="btn-danger" id="remove-btn" style="display:none;">Remove my availability</button>
+      </div>
+    </div>
+
+    <div class="filter-status" id="filter-status">
+      <span>Highlighting <span class="who" id="filter-status-name"></span>'s picks</span>
+      <button id="filter-clear-btn">Clear</button>
+    </div>
+
+    <div class="grid-scroll">
+      <table class="grid-table" id="grid-table"></table>
+    </div>
+
+    <div class="legend">
+      <span>Fewer</span>
+      <span class="legend-swatches" id="legend-swatches"></span>
+      <span>More</span>
+      <span style="margin-left:14px;"><span style="display:inline-block;width:12px;height:12px;border:2px solid var(--you);border-radius:3px;vertical-align:middle;"></span> your picks</span>
+      <span style="margin-left:14px;"><span style="display:inline-block;width:12px;height:12px;outline:2px solid var(--confirmed);outline-offset:-2px;border-radius:3px;vertical-align:middle;"></span> confirmed</span>
+      <span style="margin-left:14px;">★ most popular slot</span>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <p class="panel-title">Responded so far</p>
+      <div class="participant-chips" id="participant-chips"><span style="color:var(--text-muted); font-size:13px;">No one yet — be the first.</span></div>
+    </div>
+
+    <p class="footer-note">Self-hosted with <a href="https://github.com/" target="_blank" rel="noopener">Game Night Scheduler</a></p>
+  </div>
+
+  <div class="grid-tooltip" id="tooltip"></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="js/grid.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
