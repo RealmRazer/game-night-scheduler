@@ -15,7 +15,8 @@ No accounts, no external services, one SQLite file. Runs anywhere Node.js or Doc
 - **Filter by person** — click anyone's name to highlight just their picks on the grid and dim everyone else's.
 - **Day overlap counter** — each day's column header shows the best overlap for that day (e.g. "3/4"), and lights up when everyone in the group shares at least one common time that day.
 - **Most-popular slot highlight** — the single time (or times, if tied) with the highest overlap across the whole grid gets a small ★ marker, so the best pick jumps out without hovering every cell.
-- **No login for players** — just a name
+- **Kept out of search engines** — `robots.txt`, `noindex` meta tags, and an `X-Robots-Tag` header discourage crawlers and indexing (see below for the limits of this).
+- **No login for players** — just a name, like When2meet.
 - **Admin panel** (`/admin`, password-protected)
   - Configure the date range, time window, and slot length (15/30/60 min) shown on the grid.
   - Click a cell to pick a candidate time, then confirm it — it's pinned to the top of the page for everyone.
@@ -101,6 +102,21 @@ a single shared password against `ADMIN_PASSWORD` on every admin request (sent a
 `X-Admin-Password` header). There are no per-user admin accounts or sessions. If you
 need stronger access control, put the app behind your reverse proxy's own auth (e.g.
 Caddy `basicauth`, an nginx `auth_basic` block, or a Tailscale/VPN-only deployment).
+
+## Keeping it out of search engines / scrapers
+
+The site ships with `robots.txt` (`Disallow: /`), `<meta name="robots" content="noindex, ...">`
+on every page, and an `X-Robots-Tag` header on every response (including API routes).
+This keeps well-behaved crawlers — Google, Bing, and similar — from indexing or
+listing the page.
+
+That said, `robots.txt` and `noindex` are a *request*, not a lock: they don't stop a
+scraper script, an AI crawler that ignores robots.txt, or anyone with the link who
+just fetches the page directly. There's currently no access control on the main
+scheduling page (only `/admin` is password-protected), so anyone with the URL — human
+or bot — can view and submit availability. If you want the page to be genuinely
+unreachable without credentials, put it behind your reverse proxy's basic auth or a
+VPN/Tailscale-only deployment, same as the admin-auth note above.
 
 ## Project structure
 
