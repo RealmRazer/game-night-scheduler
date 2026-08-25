@@ -27,6 +27,13 @@ const SLOT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 function getConfig() {
   const rows = db.prepare('SELECT key, value FROM config').all();
   const cfg = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+  let shortlist = [];
+  try {
+    const parsed = JSON.parse(cfg.shortlist || '[]');
+    if (Array.isArray(parsed)) shortlist = parsed.filter((s) => SLOT_RE.test(s));
+  } catch (e) {
+    shortlist = [];
+  }
   return {
     title: cfg.title,
     startDate: cfg.start_date,
@@ -35,6 +42,7 @@ function getConfig() {
     endTime: cfg.end_time,
     slotMinutes: Number(cfg.slot_minutes),
     timezone: cfg.timezone || 'UTC',
+    shortlist,
     confirmedSlot: cfg.confirmed_slot || null
   };
 }
@@ -171,13 +179,30 @@ app.post('/api/admin/confirm', requireAdmin, (req, res) => {
   res.json(getConfig());
 });
 
+app.post('/api/admin/shortlist', requireAdmin, (req, res) => {
+  const { slots } = req.body || {};
+  if (!Array.isArray(slots) || slots.some((s) => typeof s !== 'string' || !SLOT_RE.test(s))) {
+    return res.status(400).json({ error: 'slots must be an array of valid slot IDs.' });
+  }
+  const unique = Array.from(new Set(slots));
+  if (unique.length > 3) {
+    return res.status(400).json({ error: 'Shortlist can hold at most 3 candidate times.' });
+  }
+  db.prepare(
+    'INSERT INTO config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+  ).run('shortlist', JSON.stringify(unique));
+  res.json(getConfig());
+});
+
 app.post('/api/admin/clear', requireAdmin, (req, res) => {
   const tx = db.transaction(() => {
     db.prepare('DELETE FROM availability').run();
     db.prepare('DELETE FROM participants').run();
-    db.prepare(
-      "INSERT INTO config (key, value) VALUES ('confirmed_slot', '') ON CONFLICT(key) DO UPDATE SET value = ''"
-    ).run();
+    const set = db.prepare(
+      'INSERT INTO config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+    );
+    set.run('confirmed_slot', '');
+    set.run('shortlist', '[]');
   });
   tx();
   res.json({ ok: true });

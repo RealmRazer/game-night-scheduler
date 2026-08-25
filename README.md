@@ -12,9 +12,10 @@ No accounts, no external services, one SQLite file. Runs anywhere Node.js or Doc
 - **Shared availability grid** — click-and-drag (or touch-drag) to paint the times you can play.
 - **Timezone-aware** — the admin sets the event's home timezone; every visitor sees times converted to their own browser timezone automatically (with a manual override dropdown), so a distributed group never has to do the math themselves.
 - **Live heatmap** — darker cells mean more people are free; hover a cell to see who.
-- **Filter by person** — click anyone's name to highlight just their picks on the grid and dim everyone else's.
+- **Filter by person** — click any names to highlight just their picks on the grid and dim everyone else's. Select more than one and cells show three tiers: full highlight (everyone selected is free), a lighter highlight (some are), or dimmed (none are).
 - **Day overlap counter** — each day's column header shows the best overlap for that day (e.g. "3/4"), and lights up when everyone in the group shares at least one common time that day.
 - **Most-popular slot highlight** — the single time (or times, if tied) with the highest overlap across the whole grid gets a small ★ marker, so the best pick jumps out without hovering every cell.
+- **Admin shortlist** — the admin can shortlist up to 3 candidate times by clicking cells; the shortlist is saved and visible to everyone (both as a list and as dashed outlines on the grid) while the group weighs the options, before the admin confirms one as final.
 - **Kept out of search engines** — `robots.txt`, `noindex` meta tags, and an `X-Robots-Tag` header discourage crawlers and indexing (see below for the limits of this).
 - **No login for players** — just a name, like When2meet.
 - **Admin panel** (`/admin`, password-protected)
@@ -147,7 +148,8 @@ All endpoints are JSON. Admin endpoints require an `X-Admin-Password` header.
 | POST   | `/api/admin/login`          | Check the admin password                      |
 | POST   | `/api/admin/config`         | Update event title / date range / time window  |
 | POST   | `/api/admin/confirm`        | Set (or clear) the confirmed slot              |
-| POST   | `/api/admin/clear`          | Wipe all responses and the confirmed slot      |
+| POST   | `/api/admin/shortlist`      | Set the shortlist (up to 3 candidate slots)    |
+| POST   | `/api/admin/clear`          | Wipe all responses, the shortlist, and the confirmed slot |
 
 ## License
 

@@ -17,6 +17,7 @@
     toast: document.getElementById('toast'),
     chips: document.getElementById('participant-chips'),
     confirmedSlot: document.getElementById('confirmed-banner-slot'),
+    shortlistPanel: document.getElementById('shortlist-panel'),
     tzSelect: document.getElementById('tz-select'),
     filterStatus: document.getElementById('filter-status'),
     filterStatusName: document.getElementById('filter-status-name'),
@@ -27,7 +28,7 @@
   let participants = [];
   let editing = false;
   let editingSlots = new Set();
-  let filteredName = null;
+  let filteredNames = new Set();
   let viewerTz = localStorage.getItem(TZ_STORAGE_KEY) || G.detectViewerTimezone();
 
   G.populateTimezoneSelect(els.tzSelect, viewerTz);
@@ -35,6 +36,7 @@
     viewerTz = els.tzSelect.value;
     localStorage.setItem(TZ_STORAGE_KEY, viewerTz);
     renderConfirmedBanner();
+    renderShortlist();
     renderGrid();
   });
 
@@ -65,6 +67,26 @@
     els.confirmedSlot.appendChild(div);
   }
 
+  function renderShortlist() {
+    els.shortlistPanel.innerHTML = '';
+    const list = config.shortlist || [];
+    if (!list.length) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'panel';
+    const title = document.createElement('p');
+    title.className = 'panel-title';
+    title.textContent = `Being considered (${list.length})`;
+    wrap.appendChild(title);
+    list.forEach((slot) => {
+      const item = document.createElement('div');
+      item.className = 'shortlist-item';
+      const names = whoIsFree(slot);
+      item.innerHTML = `<div><div class="slot-label">${G.formatSlotFull(slot, viewerTz)}</div><div class="slot-meta">${names.length ? names.length + ' free: ' + names.join(', ') : 'nobody free yet'}</div></div>`;
+      wrap.appendChild(item);
+    });
+    els.shortlistPanel.appendChild(wrap);
+  }
+
   function renderChips() {
     if (!participants.length) {
       els.chips.innerHTML = '<span style="color:var(--text-muted); font-size:13px;">No one yet — be the first.</span>';
@@ -73,11 +95,12 @@
     els.chips.innerHTML = '';
     participants.forEach((p) => {
       const chip = document.createElement('span');
-      chip.className = 'chip' + (p.name === filteredName ? ' active' : '');
+      chip.className = 'chip' + (filteredNames.has(p.name) ? ' active' : '');
       chip.textContent = `${p.name} (${p.slots.length})`;
       chip.title = `Click to highlight ${p.name}'s picks`;
       chip.addEventListener('click', () => {
-        filteredName = filteredName === p.name ? null : p.name;
+        if (filteredNames.has(p.name)) filteredNames.delete(p.name);
+        else filteredNames.add(p.name);
         renderChips();
         renderFilterStatus();
         renderGrid();
@@ -87,11 +110,12 @@
   }
 
   function renderFilterStatus() {
-    els.filterStatus.classList.toggle('show', !!filteredName);
-    els.filterStatusName.textContent = filteredName || '';
+    const active = filteredNames.size > 0;
+    els.filterStatus.classList.toggle('show', active);
+    els.filterStatusName.textContent = active ? Array.from(filteredNames).join(', ') : '';
   }
   els.filterClearBtn.addEventListener('click', () => {
-    filteredName = null;
+    filteredNames.clear();
     renderChips();
     renderFilterStatus();
     renderGrid();
@@ -107,44 +131,41 @@
     const mySavedSlots = new Set(
       (participants.find((p) => p.name === currentName) || { slots: [] }).slots
     );
+    const shortlist = new Set(config.shortlist || []);
+
+    function attachTooltip(td, slot) {
+      td.addEventListener('mouseenter', (e) => {
+        const names = whoIsFree(slot);
+        if (!names.length) return;
+        els.tooltip.innerHTML = `${G.formatSlotFull(slot, viewerTz)}<br><span class="who">${names.join(', ')}</span>`;
+        els.tooltip.style.display = 'block';
+      });
+      td.addEventListener('mousemove', (e) => {
+        els.tooltip.style.left = e.clientX + 14 + 'px';
+        els.tooltip.style.top = e.clientY + 14 + 'px';
+      });
+      td.addEventListener('mouseleave', () => { els.tooltip.style.display = 'none'; });
+    }
 
     G.buildGrid(els.table, config, viewerTz, (td, slot) => {
       if (!slot) return; // empty/disabled cell at a timezone-offset edge
       if (editing) {
         if (editingSlots.has(slot)) td.style.background = 'var(--you)';
         else td.style.background = '';
-      } else if (filteredName) {
-        const person = participants.find((p) => p.name === filteredName);
-        const matches = person && person.slots.includes(slot);
-        td.classList.add(matches ? 'filter-match' : 'filter-dim');
-        td.addEventListener('mouseenter', (e) => {
-          const names = whoIsFree(slot);
-          if (!names.length) return;
-          els.tooltip.innerHTML = `${G.formatSlotFull(slot, viewerTz)}<br><span class="who">${names.join(', ')}</span>`;
-          els.tooltip.style.display = 'block';
-        });
-        td.addEventListener('mousemove', (e) => {
-          els.tooltip.style.left = e.clientX + 14 + 'px';
-          els.tooltip.style.top = e.clientY + 14 + 'px';
-        });
-        td.addEventListener('mouseleave', () => { els.tooltip.style.display = 'none'; });
+      } else if (filteredNames.size > 0) {
+        const matchCount = participants.filter((p) => filteredNames.has(p.name) && p.slots.includes(slot)).length;
+        if (matchCount === 0) td.classList.add('filter-dim');
+        else if (matchCount === filteredNames.size) td.classList.add('filter-match');
+        else td.classList.add('filter-partial');
+        attachTooltip(td, slot);
       } else {
         const count = counts[slot] || 0;
         td.style.background = G.heatColor(count / maxCount);
         if (currentName && mySavedSlots.has(slot)) td.classList.add('you-selected');
         if (config.confirmedSlot === slot) td.classList.add('confirmed');
+        else if (shortlist.has(slot)) td.classList.add('shortlisted');
         if (actualMax > 1 && count === actualMax) td.classList.add('peak');
-        td.addEventListener('mouseenter', (e) => {
-          const names = whoIsFree(slot);
-          if (!names.length) return;
-          els.tooltip.innerHTML = `${G.formatSlotFull(slot, viewerTz)}<br><span class="who">${names.join(', ')}</span>`;
-          els.tooltip.style.display = 'block';
-        });
-        td.addEventListener('mousemove', (e) => {
-          els.tooltip.style.left = e.clientX + 14 + 'px';
-          els.tooltip.style.top = e.clientY + 14 + 'px';
-        });
-        td.addEventListener('mouseleave', () => { els.tooltip.style.display = 'none'; });
+        attachTooltip(td, slot);
       }
     }, (th, date, daySlots) => {
       if (!totalParticipants) return;
@@ -179,10 +200,12 @@
     ]);
     config = await cfgRes.json();
     participants = (await availRes.json()).participants;
-    if (filteredName && !participants.some((p) => p.name === filteredName)) filteredName = null;
+    const stillPresent = new Set(participants.map((p) => p.name));
+    filteredNames.forEach((n) => { if (!stillPresent.has(n)) filteredNames.delete(n); });
     els.title.textContent = config.title;
     document.title = `${config.title} — Scheduler`;
     renderConfirmedBanner();
+    renderShortlist();
     renderChips();
     renderFilterStatus();
     renderGrid();
@@ -192,7 +215,7 @@
     const name = els.nameInput.value.trim();
     if (!name) { showToast('Enter your name first.'); els.nameInput.focus(); return; }
     editing = true;
-    filteredName = null;
+    filteredNames.clear();
     renderChips();
     renderFilterStatus();
     const existing = participants.find((p) => p.name === name);

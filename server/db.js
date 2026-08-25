@@ -38,6 +38,7 @@ const DEFAULTS = {
   end_time: '23:00',
   slot_minutes: '30',
   timezone: detectServerTimezone(),
+  shortlist: '[]',
   confirmed_slot: ''
 };
 

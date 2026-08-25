@@ -78,18 +78,17 @@
     <div id="confirmed-banner-slot"></div>
 
     <div class="panel">
-      <p class="panel-title">Pick the winning time</p>
-      <p class="subtitle" style="margin-top:-6px;">Click a cell below to select it, then confirm. Darker cells have more players available — hover to see who.</p>
+      <p class="panel-title">Shortlist candidate times</p>
+      <p class="subtitle" style="margin-top:-6px;">Click up to three cells to shortlist them &mdash; everyone sees the shortlist while you decide. Darker cells have more players available; hover to see who.</p>
       <div class="identity-bar" style="margin-bottom:14px;">
         <span class="mode-pill" style="border-color:var(--border);">Showing times in</span>
         <select id="tz-select" style="min-width:220px;"></select>
       </div>
-      <div class="identity-bar" style="margin-bottom:14px;">
-        <button class="btn-primary" id="confirm-btn" disabled>Confirm selected time</button>
-        <button class="btn-ghost" id="unconfirm-btn" style="display:none;">Clear confirmed time</button>
-      </div>
+
+      <div id="shortlist-panel" class="shortlist-panel"></div>
+
       <div class="filter-status" id="filter-status">
-        <span>Highlighting <span class="who" id="filter-status-name"></span>'s picks</span>
+        <span>Highlighting <span class="who" id="filter-status-name"></span></span>
         <button id="filter-clear-btn">Clear</button>
       </div>
 
@@ -101,6 +100,7 @@
         <span class="legend-swatches" id="legend-swatches"></span>
         <span>More</span>
         <span style="margin-left:14px;">★ most popular slot</span>
+        <span style="margin-left:14px;"><span style="display:inline-block;width:12px;height:12px;outline:2px dashed var(--accent);outline-offset:-2px;border-radius:3px;vertical-align:middle;"></span> shortlisted</span>
       </div>
     </div>
 
