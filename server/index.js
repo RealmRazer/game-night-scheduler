@@ -22,6 +22,16 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 const SLOT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 
+// ---------- activity log (in-memory only — resets on restart AND on /api/admin/clear) ----------
+
+const MAX_ACTIVITY_LOG = 100;
+let activityLog = [];
+
+function logActivity(action, detail) {
+  activityLog.unshift({ ts: new Date().toISOString(), action, detail });
+  if (activityLog.length > MAX_ACTIVITY_LOG) activityLog.length = MAX_ACTIVITY_LOG;
+}
+
 // ---------- helpers ----------
 
 function getConfig() {
@@ -114,6 +124,7 @@ app.post('/api/availability', (req, res) => {
   });
   tx();
 
+  logActivity('availability', `${cleanName} updated their availability (${slots.length} slot${slots.length === 1 ? '' : 's'})`);
   res.json({ ok: true });
 });
 
@@ -126,6 +137,7 @@ app.get('/api/availability/:name', (req, res) => {
 
 app.delete('/api/availability/:name', (req, res) => {
   const info = db.prepare('DELETE FROM participants WHERE name = ?').run(req.params.name);
+  if (info.changes > 0) logActivity('availability', `${req.params.name} was removed`);
   res.json({ removed: info.changes > 0 });
 });
 
@@ -165,6 +177,7 @@ app.post('/api/admin/config', requireAdmin, (req, res) => {
     set.run('timezone', timezone);
   });
   tx();
+  logActivity('config', `Grid settings updated ("${title.trim().slice(0, 80)}", ${startDate} to ${endDate})`);
   res.json(getConfig());
 });
 
@@ -176,6 +189,7 @@ app.post('/api/admin/confirm', requireAdmin, (req, res) => {
   db.prepare(
     'INSERT INTO config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
   ).run('confirmed_slot', slot || '');
+  logActivity('confirm', slot ? `Confirmed time set to ${slot}` : 'Confirmed time cleared');
   res.json(getConfig());
 });
 
@@ -191,6 +205,7 @@ app.post('/api/admin/shortlist', requireAdmin, (req, res) => {
   db.prepare(
     'INSERT INTO config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
   ).run('shortlist', JSON.stringify(unique));
+  logActivity('shortlist', `Shortlist updated (${unique.length} candidate${unique.length === 1 ? '' : 's'})`);
   res.json(getConfig());
 });
 
@@ -205,7 +220,12 @@ app.post('/api/admin/clear', requireAdmin, (req, res) => {
     set.run('shortlist', '[]');
   });
   tx();
+  activityLog = []; // fresh round — the old log shouldn't carry over, and it never touches disk anyway
   res.json({ ok: true });
+});
+
+app.get('/api/admin/activity', requireAdmin, (req, res) => {
+  res.json({ activity: activityLog });
 });
 
 app.get('/admin', (req, res) => {

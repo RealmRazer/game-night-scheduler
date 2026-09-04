@@ -31,6 +31,7 @@
     chips: document.getElementById('participant-chips'),
     responseCount: document.getElementById('response-count'),
     clearBtn: document.getElementById('clear-btn'),
+    activityList: document.getElementById('activity-list'),
     tzSelect: document.getElementById('tz-select'),
     filterStatus: document.getElementById('filter-status'),
     filterStatusName: document.getElementById('filter-status-name'),
@@ -105,9 +106,10 @@
   // ---------- data ----------
 
   async function loadAll() {
-    const [cfgRes, availRes] = await Promise.all([
+    const [cfgRes, availRes, activityRes] = await Promise.all([
       fetch('/api/config'),
-      fetch('/api/availability')
+      fetch('/api/availability'),
+      fetch('/api/admin/activity', { headers: adminHeaders() })
     ]);
     config = await cfgRes.json();
     participants = (await availRes.json()).participants;
@@ -119,6 +121,36 @@
     renderChips();
     renderFilterStatus();
     renderGrid();
+    renderActivity(activityRes.ok ? (await activityRes.json()).activity : []);
+  }
+
+  function renderActivity(activity) {
+    els.activityList.innerHTML = '';
+    if (!activity.length) {
+      const li = document.createElement('li');
+      li.style.listStyle = 'none';
+      li.style.color = 'var(--text-muted)';
+      li.style.fontSize = '13px';
+      li.textContent = 'Nothing yet.';
+      els.activityList.appendChild(li);
+      return;
+    }
+    activity.forEach((entry) => {
+      const li = document.createElement('li');
+      const time = document.createElement('span');
+      time.className = 'activity-time';
+      time.textContent = new Date(entry.ts).toLocaleString();
+      const tag = document.createElement('span');
+      tag.className = 'activity-tag';
+      tag.textContent = entry.action;
+      const detail = document.createElement('span');
+      detail.className = 'activity-detail';
+      detail.textContent = entry.detail;
+      li.appendChild(time);
+      li.appendChild(tag);
+      li.appendChild(detail);
+      els.activityList.appendChild(li);
+    });
   }
 
   function populateConfigForm() {
